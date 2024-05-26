@@ -17,14 +17,14 @@ export const pixiInit = async (width: number, height: number) => {
 
   await pixiTextInit();
 
-  const graphics = new PIXI.Graphics();
-  graphics.moveTo(-200, +200);
-  graphics.lineTo(-200, -200);
-  graphics.lineTo(+200, -200);
-  graphics.lineTo(+200, +200);
-  graphics.fill(0xe60630);
+  // const graphics = new PIXI.Graphics();
+  // graphics.moveTo(-200, +200);
+  // graphics.lineTo(-200, -200);
+  // graphics.lineTo(+200, -200);
+  // graphics.lineTo(+200, +200);
+  // graphics.fill(0xe60630);
 
-  app.stage.addChild(graphics);
+  // app.stage.addChild(graphics);
 
   const texture_UI = new THREE.Texture(app.canvas);
   texture_UI.needsUpdate = true;

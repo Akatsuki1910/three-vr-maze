@@ -1,6 +1,6 @@
 import { createMaze } from "../src/utils/createMaze";
 
-const { maze, wallMaze } = createMaze(7, 7);
+const { maze, wallMaze } = createMaze(11, 11);
 
 const m = document.createElement("main");
 maze.forEach((v) => {

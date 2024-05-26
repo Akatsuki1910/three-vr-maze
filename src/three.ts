@@ -9,13 +9,14 @@ import {
   HemisphereLight,
   DirectionalLight,
   Group,
+  Color,
 } from "three";
 import { VR } from "./vr";
-import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
+import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
 
 export const threeInit = () => {
   const scene = new Scene();
-  // scene.background = new Color(0x7fbfff);
+  scene.background = new Color(0x7fbfff);
 
   const camera = new PerspectiveCamera(
     90,
@@ -65,11 +66,7 @@ export const threeInit = () => {
 
   const vr = new VR(scene, renderer, group);
 
-  document.body.appendChild(
-    ARButton.createButton(renderer, {
-      requiredFeatures: ["hit-test", "immersive-ar", "plane-detection"],
-    })
-  );
+  document.body.appendChild(VRButton.createButton(renderer));
 
   const animate = (
     anim: (...props: Parameters<XRFrameRequestCallback>) => Promise<void>
