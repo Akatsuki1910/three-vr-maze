@@ -54,19 +54,28 @@ import { Graphics, Triangle } from "pixi.js";
   const zp = pixiText("0");
   zp.position.y = 30;
   app.stage.addChild(zp);
+  const nowCell = pixiText("0");
+  nowCell.position.y = 60;
+  app.stage.addChild(nowCell);
 
   const size = 11;
+  const mazeSize = (size + 1) / 2;
   const { wallMaze } = createMaze(size, size);
   group.add(threeMaze(wallMaze));
   app.stage.addChild(pixiMaze(wallMaze));
 
   const clock = new Clock();
+  let nowPos = 0;
   threeAnimate(async (t, f) => {
     pixiAnimate(async () => {
       // let delta = clock.getDelta();
       // controls.update(delta);
 
       const session = renderer.xr.getSession();
+      const nowControllerPosition = {
+        x: controllers.position.x,
+        z: controllers.position.z,
+      };
       if (session) {
         const axes0 = session.inputSources[0].gamepad?.axes;
         if (axes0) {
@@ -84,18 +93,52 @@ import { Graphics, Triangle } from "pixi.js";
 
       controllers.position.x = Math.max(
         -PLANE_SIZE / 2,
-        Math.min(
-          ((size + 1) / 2) * PLANE_SIZE - PLANE_SIZE / 2,
-          controllers.position.x
-        )
+        Math.min(mazeSize * PLANE_SIZE - PLANE_SIZE / 2, controllers.position.x)
       );
       controllers.position.z = Math.max(
         -PLANE_SIZE / 2,
-        Math.min(
-          ((size + 1) / 2) * PLANE_SIZE - PLANE_SIZE / 2,
-          controllers.position.z
-        )
+        Math.min(mazeSize * PLANE_SIZE - PLANE_SIZE / 2, controllers.position.z)
       );
+
+      const prevPos =
+        (((controllers.position.x + PLANE_SIZE / 2) / PLANE_SIZE) | 0) +
+        (((controllers.position.z + PLANE_SIZE / 2) / PLANE_SIZE) | 0) *
+          mazeSize;
+      if (nowPos !== prevPos) {
+        if (nowPos + mazeSize === prevPos) {
+          if (wallMaze[(nowPos / mazeSize) | 0][nowPos % mazeSize] === 1) {
+            controllers.position.x = nowControllerPosition.x;
+            controllers.position.z = nowControllerPosition.z;
+          } else {
+            nowPos = prevPos;
+          }
+        }
+        if (nowPos - mazeSize === prevPos) {
+          if (wallMaze[(prevPos / mazeSize) | 0][prevPos % mazeSize] === 1) {
+            controllers.position.x = nowControllerPosition.x;
+            controllers.position.z = nowControllerPosition.z;
+          } else {
+            nowPos = prevPos;
+          }
+        }
+        if (nowPos + 1 === prevPos) {
+          if (wallMaze[(nowPos / mazeSize) | 0][nowPos % mazeSize] === 2) {
+            controllers.position.x = nowControllerPosition.x;
+            controllers.position.z = nowControllerPosition.z;
+          } else {
+            nowPos = prevPos;
+          }
+        }
+        if (nowPos - 1 === prevPos) {
+          if (wallMaze[(prevPos / mazeSize) | 0][prevPos % mazeSize] === 2) {
+            controllers.position.x = nowControllerPosition.x;
+            controllers.position.z = nowControllerPosition.z;
+          } else {
+            nowPos = prevPos;
+          }
+        }
+      }
+      nowCell.text = nowPos.toString();
 
       camera.rotateOnWorldAxis(new Vector3(0, 1, 0), controllers.rotation.y);
 
