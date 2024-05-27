@@ -1,4 +1,4 @@
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+// import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import {
   MeshStandardMaterial,
   Mesh,
@@ -6,6 +6,7 @@ import {
   Vector3,
   Clock,
   AxesHelper,
+  Euler,
 } from "three";
 import { pixiInit } from "./pixi";
 import { threeInit } from "./three";
@@ -15,13 +16,13 @@ import { pixiMaze } from "./utils/pixiMaze";
 import { createMaze } from "./utils/createMaze";
 
 (async () => {
-  const { scene, camera, group, renderer, animate } = threeInit();
+  const { scene, camera, group, renderer, animate, controllers } = threeInit();
 
   const far = 1.6;
   const { mesh, app } = await pixiInit(far * camera.aspect * 2, far * 2);
   scene.add(mesh);
 
-  const controls = new OrbitControls(camera, renderer.domElement);
+  // const controls = new OrbitControls(camera, renderer.domElement);
   const axesHelper = new AxesHelper(5);
   scene.add(axesHelper);
 
@@ -45,14 +46,26 @@ import { createMaze } from "./utils/createMaze";
 
   const clock = new Clock();
   animate(async (t, f) => {
-    let delta = clock.getDelta();
-    controls.update(delta);
+    // let delta = clock.getDelta();
+    // controls.update(delta);
+
+    camera.rotateOnWorldAxis(new Vector3(0, 1, 0), controllers.rotation.y);
 
     const setFar = new Vector3(
-      camera.position.x,
-      camera.position.y,
-      camera.position.z
-    ).addScaledVector(new Vector3(0, 0, -1).applyEuler(camera.rotation), far);
+      camera.position.x + controllers.position.x,
+      camera.position.y + controllers.position.y,
+      camera.position.z + controllers.position.z
+    ).addScaledVector(
+      new Vector3(0, 0, -1).applyEuler(
+        new Euler(camera.rotation.x, camera.rotation.y, camera.rotation.z)
+      ),
+      far
+    );
+    console.log(
+      controllers.rotation.x,
+      controllers.rotation.y,
+      controllers.rotation.z
+    );
     mesh.position.set(setFar.x, setFar.y, setFar.z);
     mesh.rotation.set(camera.rotation.x, camera.rotation.y, camera.rotation.z);
 

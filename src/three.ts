@@ -64,7 +64,11 @@ export const threeInit = () => {
   const group = new Group();
   scene.add(group);
 
-  const vr = new VR(scene, renderer, group);
+  const controllers = new Group();
+  controllers.add(camera);
+  scene.add(controllers);
+
+  const vr = new VR(scene, renderer, group, controllers);
 
   document.body.appendChild(VRButton.createButton(renderer));
 
@@ -80,5 +84,5 @@ export const threeInit = () => {
     renderer.setAnimationLoop(loopAnimation);
   };
 
-  return { scene, camera, group, renderer, animate };
+  return { scene, camera, group, renderer, animate, controllers };
 };

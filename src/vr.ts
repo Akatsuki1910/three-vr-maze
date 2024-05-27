@@ -1,5 +1,8 @@
 import * as THREE from "three";
-import { XRControllerModelFactory } from "three/examples/jsm/webxr/XRControllerModelFactory.js";
+import {
+  XRControllerModel,
+  XRControllerModelFactory,
+} from "three/examples/jsm/webxr/XRControllerModelFactory.js";
 
 export class VR {
   // コントローラファクトリーの準備
@@ -8,6 +11,7 @@ export class VR {
   private scene: THREE.Scene;
   private renderer: THREE.WebGLRenderer;
   private group: THREE.Group;
+  private controllers: THREE.Group;
   // レイと交差しているシェイプの一覧
   private intersected: THREE.Object3D<THREE.Object3DEventMap>[] = [];
   // ワーク行列
@@ -20,12 +24,14 @@ export class VR {
   constructor(
     scene: THREE.Scene,
     renderer: THREE.WebGLRenderer,
-    group: THREE.Group
+    group: THREE.Group,
+    controllers: THREE.Group
   ) {
     this.line = this.createControllerLine();
     this.scene = scene;
     this.renderer = renderer;
     this.group = group;
+    this.controllers = controllers;
 
     // コントローラの準備
     this.controller0 = this.addController(0);
@@ -59,14 +65,25 @@ export class VR {
 
     // コントローラモデルの追加
     const controllerGrip = this.renderer.xr.getControllerGrip(index);
-    controllerGrip.add(
-      this.controllerModelFactory.createControllerModel(controllerGrip)
-    );
+    const controllerModel =
+      this.controllerModelFactory.createControllerModel(controllerGrip);
+    controllerGrip.add(controllerModel);
     this.scene.add(controllerGrip);
+
+    this.controllers.add(controller);
+    this.controllers.add(controllerGrip);
 
     // コントローラの光線の追加
     controller.add(this.line.clone());
     return controller;
+  }
+
+  // レイと交差しているシェイプの取得
+  private getIntersections(controller: THREE.XRTargetRaySpace) {
+    this.tempMatrix.identity().extractRotation(controller.matrixWorld);
+    this.raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+    this.raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
+    return this.raycaster.intersectObjects(this.group.children, false);
   }
 
   // トリガーを押した時に呼ばれる
@@ -141,16 +158,22 @@ export class VR {
     }
   }
 
-  // レイと交差しているシェイプの取得
-  private getIntersections(controller: THREE.XRTargetRaySpace) {
-    this.tempMatrix.identity().extractRotation(controller.matrixWorld);
-    this.raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
-    this.raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
-    return this.raycaster.intersectObjects(this.group.children, false);
-  }
-
   public animate() {
     this.cleanIntersected();
+
+    const session = this.renderer.xr.getSession();
+    if (session) {
+      const axes0 = session.inputSources[0].gamepad?.axes;
+      if (axes0) {
+        this.controllers.rotation.y += axes0[2] * 0.1;
+      }
+      const axes1 = session.inputSources[1].gamepad?.axes;
+      if (axes1) {
+        this.controllers.position.x += axes1[2] * 0.1;
+        this.controllers.position.z += axes1[3] * 0.1;
+      }
+    }
+
     this.intersectObjects(this.controller0);
     this.intersectObjects(this.controller1);
   }
