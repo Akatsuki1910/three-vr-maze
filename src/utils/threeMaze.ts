@@ -5,7 +5,6 @@ import {
   Mesh,
   Group,
 } from "three";
-import { createMaze } from "./createMaze";
 
 const PLANE_SIZE = 4;
 

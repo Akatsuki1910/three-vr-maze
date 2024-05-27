@@ -7,6 +7,7 @@ import {
   Clock,
   AxesHelper,
   Euler,
+  Quaternion,
 } from "three";
 import { pixiInit } from "./pixi";
 import { threeInit } from "./three";
@@ -36,8 +37,11 @@ import { createMaze } from "./utils/createMaze";
   object.receiveShadow = true;
   group.add(object);
 
-  const te = pixiText("0");
-  app.stage.addChild(te);
+  const xp = pixiText("0");
+  app.stage.addChild(xp);
+  const zp = pixiText("0");
+  zp.position.y = 30;
+  app.stage.addChild(zp);
 
   const size = 11;
   const { wallMaze } = createMaze(size, size);
@@ -45,9 +49,29 @@ import { createMaze } from "./utils/createMaze";
   app.stage.addChild(pixiMaze(wallMaze));
 
   const clock = new Clock();
+  const nowPos = { x: 0, z: 0 };
   animate(async (t, f) => {
     // let delta = clock.getDelta();
     // controls.update(delta);
+
+    const session = renderer.xr.getSession();
+    if (session) {
+      const axes0 = session.inputSources[0].gamepad?.axes;
+      if (axes0) {
+        controllers.rotation.y += axes0[2] * 0.1;
+      }
+      const axes1 = session.inputSources[1].gamepad?.axes;
+      if (axes1) {
+        const r = camera.rotation.y + controllers.rotation.y;
+        controllers.position.x +=
+          axes1[2] * 0.1 * Math.cos(r) + axes1[3] * 0.1 * Math.sin(r);
+        controllers.position.z +=
+          axes1[3] * 0.1 * Math.cos(r) - axes1[2] * 0.1 * Math.sin(r);
+
+        if (controllers.position.x < -2) controllers.position.x = -2;
+        if (controllers.position.z < -2) controllers.position.z = -2;
+      }
+    }
 
     camera.rotateOnWorldAxis(new Vector3(0, 1, 0), controllers.rotation.y);
 
@@ -61,15 +85,11 @@ import { createMaze } from "./utils/createMaze";
       ),
       far
     );
-    console.log(
-      controllers.rotation.x,
-      controllers.rotation.y,
-      controllers.rotation.z
-    );
+
     mesh.position.set(setFar.x, setFar.y, setFar.z);
     mesh.rotation.set(camera.rotation.x, camera.rotation.y, camera.rotation.z);
 
-    te.text = t;
+    xp.text = controllers.position.x;
 
     // camera.rotation.x += delta / 5;
   });

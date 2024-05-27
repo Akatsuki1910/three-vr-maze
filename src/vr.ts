@@ -1,8 +1,5 @@
 import * as THREE from "three";
-import {
-  XRControllerModel,
-  XRControllerModelFactory,
-} from "three/examples/jsm/webxr/XRControllerModelFactory.js";
+import { XRControllerModelFactory } from "three/examples/jsm/webxr/XRControllerModelFactory.js";
 
 export class VR {
   // コントローラファクトリーの準備
@@ -160,19 +157,6 @@ export class VR {
 
   public animate() {
     this.cleanIntersected();
-
-    const session = this.renderer.xr.getSession();
-    if (session) {
-      const axes0 = session.inputSources[0].gamepad?.axes;
-      if (axes0) {
-        this.controllers.rotation.y += axes0[2] * 0.1;
-      }
-      const axes1 = session.inputSources[1].gamepad?.axes;
-      if (axes1) {
-        this.controllers.position.x += axes1[2] * 0.1;
-        this.controllers.position.z += axes1[3] * 0.1;
-      }
-    }
 
     this.intersectObjects(this.controller0);
     this.intersectObjects(this.controller1);
