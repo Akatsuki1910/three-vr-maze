@@ -26,20 +26,23 @@ export const pixiInit = async (width: number, height: number) => {
 
   // app.stage.addChild(graphics);
 
-  const texture_UI = new THREE.Texture(app.canvas);
-  texture_UI.needsUpdate = true;
+  const texture = new THREE.CanvasTexture(app.canvas);
+  texture.needsUpdate = true;
 
-  const material_UI = new THREE.MeshBasicMaterial({
-    map: texture_UI,
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
     side: THREE.DoubleSide,
   });
-  material_UI.transparent = true;
+  material.map!.needsUpdate = true;
+  material.transparent = true;
 
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(width, height),
-    material_UI
-  );
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
   mesh.position.set(0, 0, 0);
 
-  return { mesh, app };
+  const pixiAnimate = (anim: () => Promise<void>) => {
+    anim();
+    material.map!.needsUpdate = true;
+  };
+
+  return { mesh, app, pixiAnimate };
 };

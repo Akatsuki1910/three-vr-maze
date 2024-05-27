@@ -6,7 +6,7 @@ import {
   Group,
 } from "three";
 
-const PLANE_SIZE = 4;
+export const PLANE_SIZE = 4;
 
 const geometry = new PlaneGeometry(PLANE_SIZE, PLANE_SIZE);
 

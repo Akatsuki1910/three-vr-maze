@@ -72,7 +72,7 @@ export const threeInit = () => {
 
   document.body.appendChild(VRButton.createButton(renderer));
 
-  const animate = (
+  const threeAnimate = (
     anim: (...props: Parameters<XRFrameRequestCallback>) => Promise<void>
   ) => {
     const loopAnimation: XRFrameRequestCallback = (t, f) => {
@@ -84,5 +84,5 @@ export const threeInit = () => {
     renderer.setAnimationLoop(loopAnimation);
   };
 
-  return { scene, camera, group, renderer, animate, controllers };
+  return { scene, camera, group, renderer, threeAnimate, controllers };
 };

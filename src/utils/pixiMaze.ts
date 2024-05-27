@@ -1,6 +1,6 @@
 import { Graphics } from "pixi.js";
 
-const CELL_SIZE = 50;
+export const CELL_SIZE = 50;
 
 const createWall = (
   i: number,
