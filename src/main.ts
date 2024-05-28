@@ -101,10 +101,17 @@ import { Graphics, Triangle } from "pixi.js";
       );
 
       const prevPos =
-        (((controllers.position.x + PLANE_SIZE / 2) / PLANE_SIZE) | 0) +
-        (((controllers.position.z + PLANE_SIZE / 2) / PLANE_SIZE) | 0) *
-          mazeSize;
-      if (nowPos !== prevPos) {
+        Math.min(
+          ((controllers.position.x + PLANE_SIZE / 2) / PLANE_SIZE) | 0,
+          mazeSize - 1
+        ) +
+        Math.min(
+          (((controllers.position.z + PLANE_SIZE / 2) / PLANE_SIZE) | 0) *
+            mazeSize,
+          mazeSize * mazeSize - 1
+        );
+
+      if (prevPos !== mazeSize * mazeSize && nowPos !== prevPos) {
         if (nowPos + mazeSize === prevPos) {
           if (wallMaze[(nowPos / mazeSize) | 0][nowPos % mazeSize] === 1) {
             controllers.position.x = nowControllerPosition.x;
@@ -136,6 +143,14 @@ import { Graphics, Triangle } from "pixi.js";
           } else {
             nowPos = prevPos;
           }
+        }
+        if (nowPos + mazeSize + 1 === prevPos) {
+          controllers.position.x = nowControllerPosition.x;
+          controllers.position.z = nowControllerPosition.z;
+        }
+        if (nowPos - mazeSize - 1 === prevPos) {
+          controllers.position.x = nowControllerPosition.x;
+          controllers.position.z = nowControllerPosition.z;
         }
       }
       nowCell.text = nowPos.toString();
