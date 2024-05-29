@@ -64,6 +64,76 @@ import { Graphics, Triangle } from "pixi.js";
   group.add(threeMaze(wallMaze));
   app.stage.addChild(pixiMaze(wallMaze));
 
+  const pressKey: string[] = [];
+  window.addEventListener("keydown", (e) => {
+    switch (e.code) {
+      case "KeyW":
+        pressKey.push("keyW");
+        break;
+      case "KeyA":
+        pressKey.push("keyA");
+        break;
+      case "KeyS":
+        pressKey.push("keyS");
+        break;
+      case "KeyD":
+        pressKey.push("keyD");
+        break;
+    }
+  });
+  window.addEventListener("keypress", (e) => {});
+  window.addEventListener("keyup", (e) => {
+    switch (e.code) {
+      case "KeyW":
+        pressKey.splice(pressKey.indexOf("keyW"), 1);
+        break;
+      case "KeyA":
+        pressKey.splice(pressKey.indexOf("keyA"), 1);
+        break;
+      case "KeyS":
+        pressKey.splice(pressKey.indexOf("keyS"), 1);
+        break;
+      case "KeyD":
+        pressKey.splice(pressKey.indexOf("keyD"), 1);
+        break;
+    }
+  });
+
+  const collisionDetection = (prevPos: number) => {
+    let canMove = true;
+
+    if (prevPos !== mazeSize * mazeSize && nowPos !== prevPos) {
+      if (nowPos + mazeSize === prevPos) {
+        if (wallMaze[(nowPos / mazeSize) | 0][nowPos % mazeSize] === 1) {
+          canMove = false;
+        }
+      }
+      if (nowPos - mazeSize === prevPos) {
+        if (wallMaze[(prevPos / mazeSize) | 0][prevPos % mazeSize] === 1) {
+          canMove = false;
+        }
+      }
+      if (nowPos + 1 === prevPos) {
+        if (wallMaze[(nowPos / mazeSize) | 0][nowPos % mazeSize] === 2) {
+          canMove = false;
+        }
+      }
+      if (nowPos - 1 === prevPos) {
+        if (wallMaze[(prevPos / mazeSize) | 0][prevPos % mazeSize] === 2) {
+          canMove = false;
+        }
+      }
+      if (nowPos + mazeSize + 1 === prevPos) {
+        canMove = false;
+      }
+      if (nowPos - mazeSize - 1 === prevPos) {
+        canMove = false;
+      }
+    }
+
+    return canMove;
+  };
+
   const clock = new Clock();
   let nowPos = 0;
   threeAnimate(async (t, f) => {
@@ -111,49 +181,14 @@ import { Graphics, Triangle } from "pixi.js";
           mazeSize * mazeSize - 1
         );
 
-      if (prevPos !== mazeSize * mazeSize && nowPos !== prevPos) {
-        if (nowPos + mazeSize === prevPos) {
-          if (wallMaze[(nowPos / mazeSize) | 0][nowPos % mazeSize] === 1) {
-            controllers.position.x = nowControllerPosition.x;
-            controllers.position.z = nowControllerPosition.z;
-          } else {
-            nowPos = prevPos;
-          }
-        }
-        if (nowPos - mazeSize === prevPos) {
-          if (wallMaze[(prevPos / mazeSize) | 0][prevPos % mazeSize] === 1) {
-            controllers.position.x = nowControllerPosition.x;
-            controllers.position.z = nowControllerPosition.z;
-          } else {
-            nowPos = prevPos;
-          }
-        }
-        if (nowPos + 1 === prevPos) {
-          if (wallMaze[(nowPos / mazeSize) | 0][nowPos % mazeSize] === 2) {
-            controllers.position.x = nowControllerPosition.x;
-            controllers.position.z = nowControllerPosition.z;
-          } else {
-            nowPos = prevPos;
-          }
-        }
-        if (nowPos - 1 === prevPos) {
-          if (wallMaze[(prevPos / mazeSize) | 0][prevPos % mazeSize] === 2) {
-            controllers.position.x = nowControllerPosition.x;
-            controllers.position.z = nowControllerPosition.z;
-          } else {
-            nowPos = prevPos;
-          }
-        }
-        if (nowPos + mazeSize + 1 === prevPos) {
-          controllers.position.x = nowControllerPosition.x;
-          controllers.position.z = nowControllerPosition.z;
-        }
-        if (nowPos - mazeSize - 1 === prevPos) {
-          controllers.position.x = nowControllerPosition.x;
-          controllers.position.z = nowControllerPosition.z;
-        }
+      const canMove = collisionDetection(prevPos);
+      if (canMove) {
+        nowPos = prevPos;
+        nowCell.text = nowPos.toString();
+      } else {
+        controllers.position.x = nowControllerPosition.x;
+        controllers.position.z = nowControllerPosition.z;
       }
-      nowCell.text = nowPos.toString();
 
       camera.rotateOnWorldAxis(new Vector3(0, 1, 0), controllers.rotation.y);
 
