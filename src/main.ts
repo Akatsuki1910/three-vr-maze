@@ -1,4 +1,4 @@
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import {
   MeshStandardMaterial,
   Mesh,
@@ -28,7 +28,7 @@ import { Graphics } from "pixi.js";
   );
   scene.add(mesh);
 
-  const controls = new OrbitControls(camera, renderer.domElement);
+  const controls = new PointerLockControls(camera, renderer.domElement);
   const axesHelper = new AxesHelper(5);
   scene.add(axesHelper);
 
@@ -141,18 +141,20 @@ import { Graphics } from "pixi.js";
     return canMove;
   };
 
-  const clock = new Clock();
+  document.getElementsByTagName("canvas")[0].onclick = () => {
+    if (!renderer.xr.getSession()) controls.lock();
+  };
+
   let nowPos = 0;
   threeAnimate(async (t, f) => {
     pixiAnimate(async () => {
-      let delta = clock.getDelta();
-      // controls.update(delta);
-
       const session = renderer.xr.getSession();
       const nowControllerPosition = {
         x: controllers.position.x,
         z: controllers.position.z,
       };
+      const r = camera.rotation.y + controllers.rotation.y;
+
       if (session) {
         const axes0 = session.inputSources[0].gamepad?.axes;
         if (axes0) {
@@ -160,7 +162,6 @@ import { Graphics } from "pixi.js";
         }
         const axes1 = session.inputSources[1].gamepad?.axes;
         if (axes1) {
-          const r = camera.rotation.y + controllers.rotation.y;
           controllers.position.x +=
             axes1[2] * 0.1 * Math.cos(r) + axes1[3] * 0.1 * Math.sin(r);
           controllers.position.z +=
@@ -173,11 +174,13 @@ import { Graphics } from "pixi.js";
         if (pressKey.has("keyA")) pressKeyMove.x--;
         if (pressKey.has("keyS")) pressKeyMove.z++;
         if (pressKey.has("keyD")) pressKeyMove.x++;
-        controllers.position.x += pressKeyMove.x * 0.1;
-        controllers.position.z += pressKeyMove.z * 0.1;
-        camera.position.x = controllers.position.x;
-        camera.position.z = controllers.position.z;
-        controls.update(delta);
+
+        controllers.position.x +=
+          pressKeyMove.x * 0.1 * Math.cos(r) +
+          pressKeyMove.z * 0.1 * Math.sin(r);
+        controllers.position.z +=
+          pressKeyMove.z * 0.1 * Math.cos(r) -
+          pressKeyMove.x * 0.1 * Math.sin(r);
       }
 
       controllers.position.x = Math.max(
@@ -217,7 +220,12 @@ import { Graphics } from "pixi.js";
         camera.position.z + controllers.position.z
       ).addScaledVector(
         new Vector3(0, 0, -1).applyEuler(
-          new Euler(camera.rotation.x, camera.rotation.y, camera.rotation.z)
+          new Euler(
+            camera.rotation.x,
+            camera.rotation.y,
+            camera.rotation.z,
+            "YXZ"
+          )
         ),
         far
       );
@@ -226,7 +234,8 @@ import { Graphics } from "pixi.js";
       mesh.rotation.set(
         camera.rotation.x,
         camera.rotation.y,
-        camera.rotation.z
+        camera.rotation.z,
+        "YXZ"
       );
 
       p.position.set(
