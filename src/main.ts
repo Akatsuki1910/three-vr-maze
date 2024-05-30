@@ -1,4 +1,4 @@
-// import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import {
   MeshStandardMaterial,
   Mesh,
@@ -15,7 +15,7 @@ import { pixiText } from "./utils/pixi/text";
 import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
 import { CELL_SIZE, pixiMaze } from "./utils/pixiMaze";
 import { createMaze } from "./utils/createMaze";
-import { Graphics, Triangle } from "pixi.js";
+import { Graphics } from "pixi.js";
 
 (async () => {
   const { scene, camera, group, renderer, threeAnimate, controllers } =
@@ -28,7 +28,7 @@ import { Graphics, Triangle } from "pixi.js";
   );
   scene.add(mesh);
 
-  // const controls = new OrbitControls(camera, renderer.domElement);
+  const controls = new OrbitControls(camera, renderer.domElement);
   const axesHelper = new AxesHelper(5);
   scene.add(axesHelper);
 
@@ -64,20 +64,21 @@ import { Graphics, Triangle } from "pixi.js";
   group.add(threeMaze(wallMaze));
   app.stage.addChild(pixiMaze(wallMaze));
 
-  const pressKey: string[] = [];
+  const pressKey: Set<string> = new Set();
+  const pressKeyMove: { x: number; z: number } = { x: 0, z: 0 };
   window.addEventListener("keydown", (e) => {
     switch (e.code) {
       case "KeyW":
-        pressKey.push("keyW");
+        pressKey.add("keyW");
         break;
       case "KeyA":
-        pressKey.push("keyA");
+        pressKey.add("keyA");
         break;
       case "KeyS":
-        pressKey.push("keyS");
+        pressKey.add("keyS");
         break;
       case "KeyD":
-        pressKey.push("keyD");
+        pressKey.add("keyD");
         break;
     }
   });
@@ -85,16 +86,16 @@ import { Graphics, Triangle } from "pixi.js";
   window.addEventListener("keyup", (e) => {
     switch (e.code) {
       case "KeyW":
-        pressKey.splice(pressKey.indexOf("keyW"), 1);
+        pressKey.delete("keyW");
         break;
       case "KeyA":
-        pressKey.splice(pressKey.indexOf("keyA"), 1);
+        pressKey.delete("keyA");
         break;
       case "KeyS":
-        pressKey.splice(pressKey.indexOf("keyS"), 1);
+        pressKey.delete("keyS");
         break;
       case "KeyD":
-        pressKey.splice(pressKey.indexOf("keyD"), 1);
+        pressKey.delete("keyD");
         break;
     }
   });
@@ -102,31 +103,37 @@ import { Graphics, Triangle } from "pixi.js";
   const collisionDetection = (prevPos: number) => {
     let canMove = true;
 
+    const hasWall = (pos: number, wall: number) =>
+      wallMaze[(pos / mazeSize) | 0][pos % mazeSize] === wall ||
+      wallMaze[(pos / mazeSize) | 0][pos % mazeSize] === 3;
+
     if (prevPos !== mazeSize * mazeSize && nowPos !== prevPos) {
       if (nowPos + mazeSize === prevPos) {
-        if (wallMaze[(nowPos / mazeSize) | 0][nowPos % mazeSize] === 1) {
+        if (hasWall(nowPos, 1)) {
           canMove = false;
         }
       }
       if (nowPos - mazeSize === prevPos) {
-        if (wallMaze[(prevPos / mazeSize) | 0][prevPos % mazeSize] === 1) {
+        if (hasWall(prevPos, 1)) {
           canMove = false;
         }
       }
       if (nowPos + 1 === prevPos) {
-        if (wallMaze[(nowPos / mazeSize) | 0][nowPos % mazeSize] === 2) {
+        if (hasWall(nowPos, 2)) {
           canMove = false;
         }
       }
       if (nowPos - 1 === prevPos) {
-        if (wallMaze[(prevPos / mazeSize) | 0][prevPos % mazeSize] === 2) {
+        if (hasWall(prevPos, 2)) {
           canMove = false;
         }
       }
-      if (nowPos + mazeSize + 1 === prevPos) {
-        canMove = false;
-      }
-      if (nowPos - mazeSize - 1 === prevPos) {
+      if (
+        nowPos + mazeSize + 1 === prevPos ||
+        nowPos + mazeSize - 1 === prevPos ||
+        nowPos - mazeSize + 1 === prevPos ||
+        nowPos - mazeSize - 1 === prevPos
+      ) {
         canMove = false;
       }
     }
@@ -138,7 +145,7 @@ import { Graphics, Triangle } from "pixi.js";
   let nowPos = 0;
   threeAnimate(async (t, f) => {
     pixiAnimate(async () => {
-      // let delta = clock.getDelta();
+      let delta = clock.getDelta();
       // controls.update(delta);
 
       const session = renderer.xr.getSession();
@@ -159,6 +166,18 @@ import { Graphics, Triangle } from "pixi.js";
           controllers.position.z +=
             axes1[3] * 0.1 * Math.cos(r) - axes1[2] * 0.1 * Math.sin(r);
         }
+      } else {
+        pressKeyMove.x = 0;
+        pressKeyMove.z = 0;
+        if (pressKey.has("keyW")) pressKeyMove.z--;
+        if (pressKey.has("keyA")) pressKeyMove.x--;
+        if (pressKey.has("keyS")) pressKeyMove.z++;
+        if (pressKey.has("keyD")) pressKeyMove.x++;
+        controllers.position.x += pressKeyMove.x * 0.1;
+        controllers.position.z += pressKeyMove.z * 0.1;
+        camera.position.x = controllers.position.x;
+        camera.position.z = controllers.position.z;
+        controls.update(delta);
       }
 
       controllers.position.x = Math.max(
@@ -178,7 +197,7 @@ import { Graphics, Triangle } from "pixi.js";
         Math.min(
           (((controllers.position.z + PLANE_SIZE / 2) / PLANE_SIZE) | 0) *
             mazeSize,
-          mazeSize * mazeSize - 1
+          mazeSize * (mazeSize - 1)
         );
 
       const canMove = collisionDetection(prevPos);
