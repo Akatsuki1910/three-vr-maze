@@ -64,8 +64,7 @@ import { Graphics } from "pixi.js";
   group.add(threeMaze(wallMaze));
   app.stage.addChild(pixiMaze(wallMaze));
 
-  const pressKey: Set<string> = new Set();
-  const pressKeyMove: { x: number; z: number } = { x: 0, z: 0 };
+  const pressKey: Set<"keyW" | "keyA" | "keyS" | "keyD"> = new Set();
   window.addEventListener("keydown", (e) => {
     switch (e.code) {
       case "KeyW":
@@ -109,24 +108,16 @@ import { Graphics } from "pixi.js";
 
     if (prevPos !== mazeSize * mazeSize && nowPos !== prevPos) {
       if (nowPos + mazeSize === prevPos) {
-        if (hasWall(nowPos, 1)) {
-          canMove = false;
-        }
+        if (hasWall(nowPos, 1)) canMove = false;
       }
       if (nowPos - mazeSize === prevPos) {
-        if (hasWall(prevPos, 1)) {
-          canMove = false;
-        }
+        if (hasWall(prevPos, 1)) canMove = false;
       }
       if (nowPos + 1 === prevPos) {
-        if (hasWall(nowPos, 2)) {
-          canMove = false;
-        }
+        if (hasWall(nowPos, 2)) canMove = false;
       }
       if (nowPos - 1 === prevPos) {
-        if (hasWall(prevPos, 2)) {
-          canMove = false;
-        }
+        if (hasWall(prevPos, 2)) canMove = false;
       }
       if (
         nowPos + mazeSize + 1 === prevPos ||
@@ -142,8 +133,21 @@ import { Graphics } from "pixi.js";
   };
 
   document.getElementsByTagName("canvas")[0].onclick = () => {
-    if (!renderer.xr.getSession()) controls.lock();
+    if (!renderer.xr.getSession()) {
+      controls.lock();
+    }
   };
+
+  controls.addEventListener("lock", () => {
+    console.log("lock");
+    // document.body.requestFullscreen();
+    // app.resize();
+  });
+
+  controls.addEventListener("unlock", () => {
+    console.log("unlock");
+    document.exitFullscreen();
+  });
 
   let nowPos = 0;
   threeAnimate(async (t, f) => {
@@ -153,35 +157,28 @@ import { Graphics } from "pixi.js";
         x: controllers.position.x,
         z: controllers.position.z,
       };
-      const r = camera.rotation.y + controllers.rotation.y;
+      const moveNum: { x: number; z: number } = { x: 0, z: 0 };
 
       if (session) {
         const axes0 = session.inputSources[0].gamepad?.axes;
-        if (axes0) {
-          controllers.rotation.y -= axes0[2] * 0.1;
-        }
+        if (axes0) controllers.rotation.y -= axes0[2] * 0.1;
         const axes1 = session.inputSources[1].gamepad?.axes;
         if (axes1) {
-          controllers.position.x +=
-            axes1[2] * 0.1 * Math.cos(r) + axes1[3] * 0.1 * Math.sin(r);
-          controllers.position.z +=
-            axes1[3] * 0.1 * Math.cos(r) - axes1[2] * 0.1 * Math.sin(r);
+          moveNum.x = axes1[2];
+          moveNum.z = axes1[3];
         }
       } else {
-        pressKeyMove.x = 0;
-        pressKeyMove.z = 0;
-        if (pressKey.has("keyW")) pressKeyMove.z--;
-        if (pressKey.has("keyA")) pressKeyMove.x--;
-        if (pressKey.has("keyS")) pressKeyMove.z++;
-        if (pressKey.has("keyD")) pressKeyMove.x++;
-
-        controllers.position.x +=
-          pressKeyMove.x * 0.1 * Math.cos(r) +
-          pressKeyMove.z * 0.1 * Math.sin(r);
-        controllers.position.z +=
-          pressKeyMove.z * 0.1 * Math.cos(r) -
-          pressKeyMove.x * 0.1 * Math.sin(r);
+        if (pressKey.has("keyW")) moveNum.z--;
+        if (pressKey.has("keyA")) moveNum.x--;
+        if (pressKey.has("keyS")) moveNum.z++;
+        if (pressKey.has("keyD")) moveNum.x++;
       }
+
+      const r = camera.rotation.y + controllers.rotation.y;
+      controllers.position.x +=
+        (moveNum.x * Math.cos(r) + moveNum.z * Math.sin(r)) * 0.1;
+      controllers.position.z +=
+        (moveNum.z * Math.cos(r) - moveNum.x * Math.sin(r)) * 0.1;
 
       controllers.position.x = Math.max(
         -PLANE_SIZE / 2,
@@ -218,17 +215,7 @@ import { Graphics } from "pixi.js";
         camera.position.x + controllers.position.x,
         camera.position.y + controllers.position.y,
         camera.position.z + controllers.position.z
-      ).addScaledVector(
-        new Vector3(0, 0, -1).applyEuler(
-          new Euler(
-            camera.rotation.x,
-            camera.rotation.y,
-            camera.rotation.z,
-            "YXZ"
-          )
-        ),
-        far
-      );
+      ).addScaledVector(new Vector3(0, 0, -1).applyEuler(camera.rotation), far);
 
       mesh.position.set(setFar.x, setFar.y, setFar.z);
       mesh.rotation.set(

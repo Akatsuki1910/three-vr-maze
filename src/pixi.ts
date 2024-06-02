@@ -5,10 +5,10 @@ import { pixiTextInit } from "./utils/pixi/text";
 export const pixiInit = async (width: number, height: number) => {
   const app = new PIXI.Application();
   await app.init({
-    width,
-    height,
+    width: window.innerWidth,
+    height: window.innerHeight,
     antialias: true,
-    resizeTo: window,
+    // resizeTo: window,
     backgroundAlpha: 0,
   });
   app.canvas.style.position = "absolute";
@@ -17,27 +17,21 @@ export const pixiInit = async (width: number, height: number) => {
 
   await pixiTextInit();
 
-  // const graphics = new PIXI.Graphics();
-  // graphics.moveTo(-200, +200);
-  // graphics.lineTo(-200, -200);
-  // graphics.lineTo(+200, -200);
-  // graphics.lineTo(+200, +200);
-  // graphics.fill(0xe60630);
-
-  // app.stage.addChild(graphics);
-
   const texture = new THREE.CanvasTexture(app.canvas);
-  texture.needsUpdate = true;
+  // texture.needsUpdate = true;
 
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     side: THREE.DoubleSide,
+    transparent: true,
   });
-  material.map!.needsUpdate = true;
-  material.transparent = true;
 
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
   mesh.position.set(0, 0, 0);
+
+  window.addEventListener("resize", () => {
+    app.renderer.resize(window.innerWidth, window.innerHeight);
+  });
 
   const pixiAnimate = (anim: () => Promise<void>) => {
     anim();
