@@ -46,13 +46,19 @@ let wallMaze: number[][] = [];
   app.stage.addChild(pixiPlayer);
 
   const xp = pixiText("0");
+  xp.position.y = 450;
   app.stage.addChild(xp);
   const zp = pixiText("0");
-  zp.position.y = 30;
+  zp.position.y = 450;
+  zp.position.x = 90;
   app.stage.addChild(zp);
   const nowCell = pixiText("0");
-  nowCell.position.y = 60;
+  nowCell.position.y = 450;
+  nowCell.position.x = 180;
   app.stage.addChild(nowCell);
+  const playerID = pixiText("");
+  playerID.position.y = 480;
+  app.stage.addChild(playerID);
 
   // const size = 31;
   // const mazeSize = (size + 1) / 2;
@@ -143,6 +149,8 @@ let wallMaze: number[][] = [];
 
       group.add(threeMaze(wallMaze));
       app.stage.addChild(pixiMaze(wallMaze));
+
+      playerID.text = data[3];
     } else if (data[0] === "close") {
       playerData.delete(data[1]);
       if (playerCursor.has(data[1])) {
@@ -274,8 +282,7 @@ let wallMaze: number[][] = [];
       playerData.forEach((value, key) => {
         const playerP = playerCursor.get(key);
         if (!playerP) return;
-        playerP.position.set(value.pixiX, value.pixiY);
-        playerP.rotation = value.pixiR;
+        playerMove(playerP, value.pixiX, value.pixiY, value.pixiR);
 
         const playerT = playerThree.get(key);
         if (!playerT) return;

@@ -12,28 +12,32 @@ const wss = new WebSocketServer({ server, perMessageDeflate: false });
 const size = 31;
 const { wallMaze } = createMaze(size, size);
 
+const getId = (req) => req.headers["sec-websocket-key"];
+
 wss.on("connection", (socket, req) => {
-  console.log(`Client connected ${req.headers["sec-websocket-key"]}`);
+  console.log(`Client connected ${getId(req)}`);
 
   socket.on("message", (data) => {
-    console.log(`Received: ${data} by ${req.headers["sec-websocket-key"]}`);
+    console.log(`Received: ${data} by ${getId(req)}`);
 
     if (data.toString() === "first") {
-      socket.send(`first ${size} ${JSON.stringify(wallMaze)}`);
+      socket.send(
+        ["first", size, JSON.stringify(wallMaze), getId(req)].join(" ")
+      );
     } else {
       wss.clients.forEach((client) => {
         if (client !== socket && client.readyState === WebSocket.OPEN) {
-          client.send(`${req.headers["sec-websocket-key"]} ${data}`);
+          client.send([getId(req), data].join(" "));
         }
       });
     }
   });
 
   socket.on("close", () => {
-    console.log(`Client disconnected ${req.headers["sec-websocket-key"]}`);
+    console.log(`Client disconnected ${getId(req)}`);
     wss.clients.forEach((client) => {
       if (client !== socket && client.readyState === WebSocket.OPEN) {
-        client.send(`close ${req.headers["sec-websocket-key"]}`);
+        client.send(["close", getId(req)].join(" "));
       }
     });
   });
