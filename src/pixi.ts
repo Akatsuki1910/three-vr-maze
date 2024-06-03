@@ -18,10 +18,10 @@ export const pixiInit = async (width: number, height: number) => {
   await pixiTextInit();
 
   const texture = new THREE.CanvasTexture(app.canvas);
-  // texture.needsUpdate = true;
 
   const material = new THREE.MeshBasicMaterial({
     map: texture,
+    // color: 0xffffff,
     side: THREE.DoubleSide,
     transparent: true,
   });
@@ -29,14 +29,15 @@ export const pixiInit = async (width: number, height: number) => {
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
   mesh.position.set(0, 0, 0);
 
-  window.addEventListener("resize", () => {
-    app.renderer.resize(window.innerWidth, window.innerHeight);
-  });
-
   const pixiAnimate = (anim: () => Promise<void>) => {
     anim();
     material.map!.needsUpdate = true;
   };
 
-  return { mesh, app, pixiAnimate };
+  const pixiUpdatePosition = (pos: THREE.Vector3, rot: THREE.Euler) => {
+    mesh.position.set(pos.x, pos.y, pos.z);
+    mesh.rotation.set(rot.x, rot.y, rot.z, "YXZ");
+  };
+
+  return { mesh, app, pixiAnimate, pixiUpdatePosition };
 };

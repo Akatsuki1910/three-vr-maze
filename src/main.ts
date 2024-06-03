@@ -1,28 +1,25 @@
-import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+import { Graphics } from "pixi.js";
 import {
-  MeshStandardMaterial,
-  Mesh,
-  ConeGeometry,
-  Vector3,
-  Clock,
   AxesHelper,
-  Euler,
-  Quaternion,
+  ConeGeometry,
+  Mesh,
+  MeshStandardMaterial,
+  Vector3,
 } from "three";
+import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { pixiInit } from "./pixi";
 import { threeInit } from "./three";
-import { pixiText } from "./utils/pixi/text";
-import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
-import { CELL_SIZE, pixiMaze } from "./utils/pixiMaze";
 import { createMaze } from "./utils/createMaze";
-import { Graphics } from "pixi.js";
+import { pixiText } from "./utils/pixi/text";
+import { CELL_SIZE, pixiMaze } from "./utils/pixiMaze";
+import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
 
 (async () => {
   const { scene, camera, group, renderer, threeAnimate, controllers } =
     threeInit();
 
   const far = 1.6;
-  const { mesh, app, pixiAnimate } = await pixiInit(
+  const { mesh, app, pixiAnimate, pixiUpdatePosition } = await pixiInit(
     far * camera.aspect * 2,
     far * 2
   );
@@ -58,7 +55,7 @@ import { Graphics } from "pixi.js";
   nowCell.position.y = 60;
   app.stage.addChild(nowCell);
 
-  const size = 11;
+  const size = 31;
   const mazeSize = (size + 1) / 2;
   const { wallMaze } = createMaze(size, size);
   group.add(threeMaze(wallMaze));
@@ -146,7 +143,7 @@ import { Graphics } from "pixi.js";
 
   controls.addEventListener("unlock", () => {
     console.log("unlock");
-    document.exitFullscreen();
+    // document.exitFullscreen();
   });
 
   let nowPos = 0;
@@ -217,13 +214,7 @@ import { Graphics } from "pixi.js";
         camera.position.z + controllers.position.z
       ).addScaledVector(new Vector3(0, 0, -1).applyEuler(camera.rotation), far);
 
-      mesh.position.set(setFar.x, setFar.y, setFar.z);
-      mesh.rotation.set(
-        camera.rotation.x,
-        camera.rotation.y,
-        camera.rotation.z,
-        "YXZ"
-      );
+      pixiUpdatePosition(setFar, camera.rotation);
 
       p.position.set(
         ((controllers.position.x + PLANE_SIZE / 2) / PLANE_SIZE) * CELL_SIZE,
