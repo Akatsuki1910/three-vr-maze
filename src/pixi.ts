@@ -22,12 +22,19 @@ export const pixiInit = async (width: number, height: number) => {
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     // color: 0xffffff,
-    side: THREE.DoubleSide,
     transparent: true,
   });
 
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
   mesh.position.set(0, 0, 0);
+  mesh.material.depthTest = false;
+  mesh.renderOrder = 1;
+
+  const bg = new PIXI.Graphics();
+  bg.rect(0, 0, 450, 450 + 30 * 2 + 5);
+  bg.fill(0x000000);
+  bg.alpha = 0.5;
+  app.stage.addChild(bg);
 
   const pixiAnimate = (anim: () => Promise<void>) => {
     anim();
