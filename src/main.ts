@@ -13,11 +13,46 @@ import { pixiText } from "./utils/pixi/text";
 import { CELL_SIZE, pixiMaze } from "./utils/pixiMaze";
 import { createPlayer, playerMove } from "./utils/player";
 import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
+import nipplejs from "nipplejs";
 
 let mazeSize = 0;
 let wallMaze: number[][] = [];
 
+const isSp = window.DeviceOrientationEvent && "ontouchstart" in window;
+
 (async () => {
+  let spMove = { r: 0, d: 0 };
+  let spCamera = { r: 0, d: 0 };
+  const manager = nipplejs.create({
+    zone: document.getElementById("nipple-left")!,
+    mode: "static",
+    position: { top: "80%", left: "10%" },
+  });
+  const manager2 = nipplejs.create({
+    zone: document.getElementById("nipple-right")!,
+    mode: "static",
+    position: { top: "80%", right: "10%" },
+  });
+  if (isSp) {
+    manager.on("move", (_, data) => {
+      console.log(data.angle.radian, data.distance);
+      spMove = { r: data.angle.radian, d: data.distance / 50 };
+    });
+    manager.on("end", () => {
+      spMove = { r: 0, d: 0 };
+    });
+    manager2.on("move", (_, data) => {
+      console.log(data.angle.radian, data.distance);
+      spCamera = { r: data.angle.radian, d: data.distance / 1000 };
+    });
+    manager2.on("end", () => {
+      spCamera = { r: 0, d: 0 };
+    });
+  } else {
+    manager.destroy();
+    manager2.destroy();
+  }
+
   const { scene, camera, group, renderer, threeAnimate, controllers } =
     threeInit();
 
@@ -99,11 +134,11 @@ let wallMaze: number[][] = [];
     return canMove;
   };
 
-  document.getElementsByTagName("canvas")[0].onclick = () => {
-    if (!renderer.xr.getSession()) {
-      controls.lock();
-    }
-  };
+  // document.getElementsByTagName("canvas")[0].onclick = () => {
+  //   if (!renderer.xr.getSession()) {
+  //     controls.lock();
+  //   }
+  // };
 
   controls.addEventListener("lock", () => {
     console.log("lock");
@@ -220,11 +255,16 @@ let wallMaze: number[][] = [];
           moveNum.x = axes1[2];
           moveNum.z = axes1[3];
         }
-      } else {
+      } else if (!isSp) {
         if (pressKey.has("KeyW")) moveNum.z--;
         if (pressKey.has("KeyA")) moveNum.x--;
         if (pressKey.has("KeyS")) moveNum.z++;
         if (pressKey.has("KeyD")) moveNum.x++;
+      } else {
+        moveNum.x = Math.cos(spMove.r) * spMove.d;
+        moveNum.z = Math.sin(spMove.r) * -spMove.d;
+        camera.rotation.x += Math.sin(spCamera.r) * spCamera.d;
+        camera.rotation.y += Math.cos(spCamera.r) * -spCamera.d;
       }
 
       const r = camera.rotation.y + controllers.rotation.y;

@@ -6,6 +6,7 @@
     "@types/three": "^0.163.0",
     "@types/ws": "^8.5.10",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "nipplejs": "^0.10.2",
     "pixi.js": "^8.1.0",
     "three": "^0.163.0",
     "tsx": "^4.11.0",

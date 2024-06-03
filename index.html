@@ -10,10 +10,32 @@
         font-family: "ich1Q";
         src: url("/public/fonts/ich1Q-hand-Regular.ttf") format("ttf"); /* 実際のフォントファイルの場所 */
       }
+
+      #nipple-wrapper {
+        position: absolute;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: row;
+        width: 100%;
+        height: 100%;
+      }
+      #nipple-left {
+        width: 50%;
+        height: 100%;
+      }
+      #nipple-right {
+        width: 50%;
+        height: 100%;
+      }
     </style>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
+    <div id="nipple-wrapper">
+      <div id="nipple-left"></div>
+      <div id="nipple-right"></div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
