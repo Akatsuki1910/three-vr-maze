@@ -13,6 +13,7 @@ import { createMaze } from "./utils/createMaze";
 import { pixiText } from "./utils/pixi/text";
 import { CELL_SIZE, pixiMaze } from "./utils/pixiMaze";
 import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
+import { pressKey } from "./utils/key";
 
 (async () => {
   const { scene, camera, group, renderer, threeAnimate, controllers } =
@@ -60,41 +61,6 @@ import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
   const { wallMaze } = createMaze(size, size);
   group.add(threeMaze(wallMaze));
   app.stage.addChild(pixiMaze(wallMaze));
-
-  const pressKey: Set<"keyW" | "keyA" | "keyS" | "keyD"> = new Set();
-  window.addEventListener("keydown", (e) => {
-    switch (e.code) {
-      case "KeyW":
-        pressKey.add("keyW");
-        break;
-      case "KeyA":
-        pressKey.add("keyA");
-        break;
-      case "KeyS":
-        pressKey.add("keyS");
-        break;
-      case "KeyD":
-        pressKey.add("keyD");
-        break;
-    }
-  });
-  window.addEventListener("keypress", (e) => {});
-  window.addEventListener("keyup", (e) => {
-    switch (e.code) {
-      case "KeyW":
-        pressKey.delete("keyW");
-        break;
-      case "KeyA":
-        pressKey.delete("keyA");
-        break;
-      case "KeyS":
-        pressKey.delete("keyS");
-        break;
-      case "KeyD":
-        pressKey.delete("keyD");
-        break;
-    }
-  });
 
   const collisionDetection = (prevPos: number) => {
     let canMove = true;
@@ -165,10 +131,10 @@ import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
           moveNum.z = axes1[3];
         }
       } else {
-        if (pressKey.has("keyW")) moveNum.z--;
-        if (pressKey.has("keyA")) moveNum.x--;
-        if (pressKey.has("keyS")) moveNum.z++;
-        if (pressKey.has("keyD")) moveNum.x++;
+        if (pressKey.has("KeyW")) moveNum.z--;
+        if (pressKey.has("KeyA")) moveNum.x--;
+        if (pressKey.has("KeyS")) moveNum.z++;
+        if (pressKey.has("KeyD")) moveNum.x++;
       }
 
       const r = camera.rotation.y + controllers.rotation.y;

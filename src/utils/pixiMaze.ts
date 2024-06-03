@@ -1,6 +1,6 @@
 import { Graphics } from "pixi.js";
 
-export const CELL_SIZE = 50;
+export let CELL_SIZE = 50;
 
 const createWall = (
   i: number,
@@ -29,6 +29,7 @@ const createWall = (
 
 export const pixiMaze = (wallMaze: number[][]) => {
   const g = new Graphics();
+  CELL_SIZE = 450 / wallMaze.length;
 
   for (let i = 0; i < wallMaze.length; i++) {
     for (let j = 0; j < wallMaze[i].length; j++) {
