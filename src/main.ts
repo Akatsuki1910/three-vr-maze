@@ -132,7 +132,8 @@ let wallMaze: number[][] = [];
     ReturnType<typeof createPlayer>["threePlayer"]
   >();
 
-  const socket = new WebSocket("ws://localhost:3000");
+  const socket = new WebSocket("wss://172.28.20.95:3000");
+  socket.onerror = (error) => console.error(error);
   socket.onopen = () => socket.send("first");
   socket.onmessage = (event) => {
     const data = event.data.split(" ");

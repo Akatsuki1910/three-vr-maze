@@ -11,3 +11,7 @@ https://ich1q.one/works/63/
 https://app.quicktype.io/
 
 https://immersive-web.github.io/webxr-samples/
+
+```
+openssl genrsa -out key.pem && openssl req -new -key key.pem -out csr.pem && openssl x509 -req -days 9999 -in csr.pem -signkey key.pem -out cert.pem
+```

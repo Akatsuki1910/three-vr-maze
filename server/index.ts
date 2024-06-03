@@ -1,11 +1,18 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { createMaze } from "../src/utils/createMaze";
-const server = new WebSocketServer({ port: 3000 });
+import { createServer } from "https";
+import { readFileSync } from "fs";
+
+const server = createServer({
+  cert: readFileSync("./cert.pem"),
+  key: readFileSync("./key.pem"),
+});
+const wss = new WebSocketServer({ server, perMessageDeflate: false });
 
 const size = 31;
 const { wallMaze } = createMaze(size, size);
 
-server.on("connection", (socket, req) => {
+wss.on("connection", (socket, req) => {
   console.log(`Client connected ${req.headers["sec-websocket-key"]}`);
 
   socket.on("message", (data) => {
@@ -14,7 +21,7 @@ server.on("connection", (socket, req) => {
     if (data.toString() === "first") {
       socket.send(`first ${size} ${JSON.stringify(wallMaze)}`);
     } else {
-      server.clients.forEach((client) => {
+      wss.clients.forEach((client) => {
         if (client !== socket && client.readyState === WebSocket.OPEN) {
           client.send(`${req.headers["sec-websocket-key"]} ${data}`);
         }
@@ -24,10 +31,16 @@ server.on("connection", (socket, req) => {
 
   socket.on("close", () => {
     console.log(`Client disconnected ${req.headers["sec-websocket-key"]}`);
-    server.clients.forEach((client) => {
+    wss.clients.forEach((client) => {
       if (client !== socket && client.readyState === WebSocket.OPEN) {
         client.send(`close ${req.headers["sec-websocket-key"]}`);
       }
     });
   });
+
+  socket.on("error", console.error);
+});
+
+server.listen(3000, () => {
+  console.log("Server started on https://localhost:3000");
 });

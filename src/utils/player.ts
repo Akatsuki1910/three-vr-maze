@@ -1,4 +1,3 @@
-import { group } from "console";
 import { Graphics } from "pixi.js";
 import { ConeGeometry, MeshBasicMaterial, Mesh, Group } from "three";
 
