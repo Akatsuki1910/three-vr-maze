@@ -8,14 +8,11 @@ import {
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { pixiInit } from "./pixi";
 import { threeInit } from "./three";
-import { createMaze } from "./utils/createMaze";
+import { pressKey } from "./utils/key";
 import { pixiText } from "./utils/pixi/text";
 import { CELL_SIZE, pixiMaze } from "./utils/pixiMaze";
-import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
-import { pressKey } from "./utils/key";
 import { createPlayer, playerMove } from "./utils/player";
-import { Graphics } from "pixi.js";
-import { create } from "domain";
+import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
 
 let mazeSize = 0;
 let wallMaze: number[][] = [];
@@ -45,8 +42,8 @@ let wallMaze: number[][] = [];
   object.receiveShadow = true;
   group.add(object);
 
-  const p = createPlayer(true);
-  app.stage.addChild(p);
+  const { pixiPlayer } = createPlayer(true);
+  app.stage.addChild(pixiPlayer);
 
   const xp = pixiText("0");
   app.stage.addChild(xp);
@@ -113,8 +110,27 @@ let wallMaze: number[][] = [];
     // document.exitFullscreen();
   });
 
-  const playerData = new Map<string, { x: number; y: number; r: number }>();
-  const playerCursor = new Map<string, ReturnType<typeof createPlayer>>();
+  const playerData = new Map<
+    string,
+    {
+      pixiX: number;
+      pixiY: number;
+      pixiR: number;
+      threeX: number;
+      threeY: number;
+      threeRX: number;
+      threeRY: number;
+      threeRZ: number;
+    }
+  >();
+  const playerCursor = new Map<
+    string,
+    ReturnType<typeof createPlayer>["pixiPlayer"]
+  >();
+  const playerThree = new Map<
+    string,
+    ReturnType<typeof createPlayer>["threePlayer"]
+  >();
 
   const socket = new WebSocket("ws://localhost:3000");
   socket.onopen = () => socket.send("first");
@@ -128,20 +144,32 @@ let wallMaze: number[][] = [];
       app.stage.addChild(pixiMaze(wallMaze));
     } else if (data[0] === "close") {
       playerData.delete(data[1]);
-      if (playerCursor.get(data[1])) {
+      if (playerCursor.has(data[1])) {
         playerCursor.get(data[1])?.destroy();
         playerCursor.delete(data[1]);
       }
-    } else {
-      if (!playerCursor.has(data[3])) {
-        const player = createPlayer();
-        playerCursor.set(data[3], player);
-        app.stage.addChild(player);
+
+      if (playerThree.get(data[1])) {
+        scene.remove(playerThree.get(data[1])!);
+        playerThree.delete(data[1]);
       }
-      playerData.set(data[3], {
-        x: parseFloat(data[0]),
-        y: parseFloat(data[1]),
-        r: data[2],
+    } else {
+      if (!playerCursor.has(data[0])) {
+        const { pixiPlayer, threePlayer } = createPlayer();
+        playerCursor.set(data[0], pixiPlayer);
+        app.stage.addChild(pixiPlayer);
+        playerThree.set(data[0], threePlayer);
+        scene.add(threePlayer);
+      }
+      playerData.set(data[0], {
+        pixiX: parseFloat(data[1]),
+        pixiY: parseFloat(data[2]),
+        pixiR: parseFloat(data[3]),
+        threeX: parseFloat(data[4]),
+        threeY: parseFloat(data[5]),
+        threeRX: parseFloat(data[6]),
+        threeRY: parseFloat(data[7]),
+        threeRZ: parseFloat(data[8]),
       });
     }
   };
@@ -153,8 +181,19 @@ let wallMaze: number[][] = [];
     pixiAnimate(async () => {
       if (wallMaze.length === 0) return;
 
-      if (frame % 10 === 0) {
-        socket.send(`${p.position.x} ${p.position.y} ${p.rotation}`);
+      if (frame % 2 === 0) {
+        socket.send(
+          [
+            pixiPlayer.position.x,
+            pixiPlayer.position.y,
+            pixiPlayer.rotation,
+            controllers.position.x,
+            controllers.position.z,
+            camera.rotation.x,
+            camera.rotation.y,
+            camera.rotation.z,
+          ].join(" ")
+        );
       }
 
       const session = renderer.xr.getSession();
@@ -225,17 +264,27 @@ let wallMaze: number[][] = [];
       pixiUpdatePosition(setFar, camera.rotation);
 
       playerMove(
-        p,
+        pixiPlayer,
         ((controllers.position.x + PLANE_SIZE / 2) / PLANE_SIZE) * CELL_SIZE,
         ((controllers.position.z + PLANE_SIZE / 2) / PLANE_SIZE) * CELL_SIZE,
         -camera.rotation.reorder("YXZ").y
       );
 
       playerData.forEach((value, key) => {
-        const player = playerCursor.get(key);
-        if (!player) return;
-        player.position.set(value.x, value.y);
-        player.rotation = value.r;
+        const playerP = playerCursor.get(key);
+        if (!playerP) return;
+        playerP.position.set(value.pixiX, value.pixiY);
+        playerP.rotation = value.pixiR;
+
+        const playerT = playerThree.get(key);
+        if (!playerT) return;
+        playerT.position.set(value.threeX, 0, value.threeY);
+        playerT.rotation.set(
+          value.threeRX,
+          value.threeRY,
+          value.threeRZ,
+          "YXZ"
+        );
       });
 
       xp.text = controllers.position.x.toFixed(2);

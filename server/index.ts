@@ -16,7 +16,7 @@ server.on("connection", (socket, req) => {
     } else {
       server.clients.forEach((client) => {
         if (client !== socket && client.readyState === WebSocket.OPEN) {
-          client.send(`${data} ${req.headers["sec-websocket-key"]}`);
+          client.send(`${req.headers["sec-websocket-key"]} ${data}`);
         }
       });
     }
