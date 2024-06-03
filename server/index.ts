@@ -2,23 +2,25 @@ import WebSocket, { WebSocketServer } from "ws";
 import { createMaze } from "../src/utils/createMaze";
 import { createServer } from "https";
 import { readFileSync } from "fs";
+import { IncomingMessage } from "http";
 
-const server = createServer({
-  cert: readFileSync("./cert.pem"),
-  key: readFileSync("./key.pem"),
-});
-const wss = new WebSocketServer({ server, perMessageDeflate: false });
+// const server = createServer({
+//   cert: readFileSync("./cert.pem"),
+//   key: readFileSync("./key.pem"),
+// });
+// const wss = new WebSocketServer({ server, perMessageDeflate: false });
+const wss = new WebSocketServer({ port: 3000 });
 
 const size = 31;
 const { wallMaze } = createMaze(size, size);
 
-const getId = (req) => req.headers["sec-websocket-key"];
+const getId = (req: IncomingMessage) => req.headers["sec-websocket-key"];
 
 wss.on("connection", (socket, req) => {
   console.log(`Client connected ${getId(req)}`);
 
   socket.on("message", (data) => {
-    console.log(`Received: ${data} by ${getId(req)}`);
+    // console.log(`Received: ${data} by ${getId(req)}`);
 
     if (data.toString() === "first") {
       socket.send(
@@ -45,6 +47,6 @@ wss.on("connection", (socket, req) => {
   socket.on("error", console.error);
 });
 
-server.listen(3000, () => {
-  console.log("Server started on https://localhost:3000");
-});
+// server.listen(3000, () => {
+//   console.log("Server started on https://localhost:3000");
+// });

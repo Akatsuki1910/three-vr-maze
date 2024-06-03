@@ -173,7 +173,8 @@ const isSp = window.DeviceOrientationEvent && "ontouchstart" in window;
     ReturnType<typeof createPlayer>["threePlayer"]
   >();
 
-  const socket = new WebSocket("wss://172.28.20.95:3000");
+  const hostname = new URL(window.location.href).hostname;
+  const socket = new WebSocket(`wss://${hostname}:3000`);
   socket.onerror = (error) => console.error(error);
   socket.onopen = () => socket.send("first");
   socket.onmessage = (event) => {
