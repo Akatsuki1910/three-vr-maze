@@ -1,26 +1,25 @@
 {
   "name": "three-vr",
-  "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/three": "^0.163.0",
+    "@types/ws": "^8.5.10",
+    "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "pixi.js": "^8.1.0",
+    "three": "^0.163.0",
+    "tsx": "^4.11.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
+    "ws": "^8.17.0"
+  },
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vite test"
+    "test": "vite test",
+    "server": "tsx ./server/index.ts"
   },
-  "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.12.7",
-    "@types/three": "^0.163.0",
-    "@vitejs/plugin-basic-ssl": "^1.1.0",
-    "pixi.js": "^8.1.0",
-    "three": "^0.163.0",
-    "tsx": "^4.7.2",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.0"
-  },
-  "dependencies": {
-    "express": "^4.19.2"
-  }
+  "type": "module"
 }

@@ -1,4 +1,3 @@
-import { Graphics } from "pixi.js";
 import {
   AxesHelper,
   ConeGeometry,
@@ -14,6 +13,12 @@ import { pixiText } from "./utils/pixi/text";
 import { CELL_SIZE, pixiMaze } from "./utils/pixiMaze";
 import { PLANE_SIZE, threeMaze } from "./utils/threeMaze";
 import { pressKey } from "./utils/key";
+import { createPlayer, playerMove } from "./utils/player";
+import { Graphics } from "pixi.js";
+import { create } from "domain";
+
+let mazeSize = 0;
+let wallMaze: number[][] = [];
 
 (async () => {
   const { scene, camera, group, renderer, threeAnimate, controllers } =
@@ -40,11 +45,7 @@ import { pressKey } from "./utils/key";
   object.receiveShadow = true;
   group.add(object);
 
-  const p = new Graphics();
-  p.moveTo(0, -10);
-  p.lineTo(5, 10);
-  p.lineTo(-5, 10);
-  p.fill(0xe60630);
+  const p = createPlayer(true);
   app.stage.addChild(p);
 
   const xp = pixiText("0");
@@ -56,11 +57,11 @@ import { pressKey } from "./utils/key";
   nowCell.position.y = 60;
   app.stage.addChild(nowCell);
 
-  const size = 31;
-  const mazeSize = (size + 1) / 2;
-  const { wallMaze } = createMaze(size, size);
-  group.add(threeMaze(wallMaze));
-  app.stage.addChild(pixiMaze(wallMaze));
+  // const size = 31;
+  // const mazeSize = (size + 1) / 2;
+  // const { wallMaze } = createMaze(size, size);
+  // group.add(threeMaze(wallMaze));
+  // app.stage.addChild(pixiMaze(wallMaze));
 
   const collisionDetection = (prevPos: number) => {
     let canMove = true;
@@ -112,9 +113,50 @@ import { pressKey } from "./utils/key";
     // document.exitFullscreen();
   });
 
+  const playerData = new Map<string, { x: number; y: number; r: number }>();
+  const playerCursor = new Map<string, ReturnType<typeof createPlayer>>();
+
+  const socket = new WebSocket("ws://localhost:3000");
+  socket.onopen = () => socket.send("first");
+  socket.onmessage = (event) => {
+    const data = event.data.split(" ");
+    if (data[0] === "first") {
+      mazeSize = (Number(data[1]) + 1) / 2;
+      wallMaze = JSON.parse(data[2]);
+
+      group.add(threeMaze(wallMaze));
+      app.stage.addChild(pixiMaze(wallMaze));
+    } else if (data[0] === "close") {
+      playerData.delete(data[1]);
+      if (playerCursor.get(data[1])) {
+        playerCursor.get(data[1])?.destroy();
+        playerCursor.delete(data[1]);
+      }
+    } else {
+      if (!playerCursor.has(data[3])) {
+        const player = createPlayer();
+        playerCursor.set(data[3], player);
+        app.stage.addChild(player);
+      }
+      playerData.set(data[3], {
+        x: parseFloat(data[0]),
+        y: parseFloat(data[1]),
+        r: data[2],
+      });
+    }
+  };
+  socket.onclose = () => console.log("Connection closed");
+
   let nowPos = 0;
+  let frame = 0;
   threeAnimate(async (t, f) => {
     pixiAnimate(async () => {
+      if (wallMaze.length === 0) return;
+
+      if (frame % 10 === 0) {
+        socket.send(`${p.position.x} ${p.position.y} ${p.rotation}`);
+      }
+
       const session = renderer.xr.getSession();
       const nowControllerPosition = {
         x: controllers.position.x,
@@ -182,14 +224,24 @@ import { pressKey } from "./utils/key";
 
       pixiUpdatePosition(setFar, camera.rotation);
 
-      p.position.set(
+      playerMove(
+        p,
         ((controllers.position.x + PLANE_SIZE / 2) / PLANE_SIZE) * CELL_SIZE,
-        ((controllers.position.z + PLANE_SIZE / 2) / PLANE_SIZE) * CELL_SIZE
+        ((controllers.position.z + PLANE_SIZE / 2) / PLANE_SIZE) * CELL_SIZE,
+        -camera.rotation.reorder("YXZ").y
       );
-      p.rotation = -camera.rotation.reorder("YXZ").y;
+
+      playerData.forEach((value, key) => {
+        const player = playerCursor.get(key);
+        if (!player) return;
+        player.position.set(value.x, value.y);
+        player.rotation = value.r;
+      });
 
       xp.text = controllers.position.x.toFixed(2);
       zp.text = controllers.position.z.toFixed(2);
+
+      frame++;
     });
   });
 })();
