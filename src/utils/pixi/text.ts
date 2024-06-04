@@ -1,14 +1,13 @@
 import * as PIXI from "pixi.js";
 
 export const pixiTextInit = async () => {
-  PIXI.Assets.addBundle("fonts", {
-    ich1Q: {
-      src: "/fonts/ich1Q-hand-Regular.ttf",
-      data: { family: "ich1Q" },
-    },
-  });
-
-  await PIXI.Assets.loadBundle("fonts");
+  // PIXI.Assets.addBundle("fonts", {
+  //   ich1Q: {
+  //     src: "/fonts/ich1Q-hand-Regular.ttf",
+  //     data: { family: "ich1Q" },
+  //   },
+  // });
+  // await PIXI.Assets.loadBundle("fonts");
 };
 
 export const pixiText = (text: string) => {
