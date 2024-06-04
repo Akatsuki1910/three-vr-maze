@@ -1,28 +1,43 @@
-import * as THREE from "three";
+import {
+  BufferGeometry,
+  Event,
+  Group,
+  Line,
+  Matrix4,
+  Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  Object3DEventMap,
+  Raycaster,
+  Scene,
+  Vector3,
+  WebGLRenderer,
+  XRTargetRaySpace,
+} from "three";
 import { XRControllerModelFactory } from "three/examples/jsm/webxr/XRControllerModelFactory.js";
 
 export class VR {
   // コントローラファクトリーの準備
   private controllerModelFactory = new XRControllerModelFactory();
-  private line: THREE.Line;
-  private scene: THREE.Scene;
-  private renderer: THREE.WebGLRenderer;
-  private group: THREE.Group;
-  private controllers: THREE.Group;
+  private line: Line;
+  private scene: Scene;
+  private renderer: WebGLRenderer;
+  private group: Group;
+  private controllers: Group;
   // レイと交差しているシェイプの一覧
-  private intersected: THREE.Object3D<THREE.Object3DEventMap>[] = [];
+  private intersected: Object3D<Object3DEventMap>[] = [];
   // ワーク行列
-  private tempMatrix = new THREE.Matrix4();
+  private tempMatrix = new Matrix4();
   // レイキャスターの準備
-  private raycaster = new THREE.Raycaster();
-  private controller0: THREE.XRTargetRaySpace;
-  private controller1: THREE.XRTargetRaySpace;
+  private raycaster = new Raycaster();
+  private controller0: XRTargetRaySpace;
+  private controller1: XRTargetRaySpace;
 
   constructor(
-    scene: THREE.Scene,
-    renderer: THREE.WebGLRenderer,
-    group: THREE.Group,
-    controllers: THREE.Group
+    scene: Scene,
+    renderer: WebGLRenderer,
+    group: Group,
+    controllers: Group
   ) {
     this.line = this.createControllerLine();
     this.scene = scene;
@@ -43,11 +58,11 @@ export class VR {
 
   private createControllerLine() {
     // コントローラの光線の準備
-    const geometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, -1),
+    const geometry = new BufferGeometry().setFromPoints([
+      new Vector3(0, 0, 0),
+      new Vector3(0, 0, -1),
     ]);
-    const line = new THREE.Line(geometry);
+    const line = new Line(geometry);
     line.name = "line";
     line.scale.z = 5;
 
@@ -76,7 +91,7 @@ export class VR {
   }
 
   // レイと交差しているシェイプの取得
-  private getIntersections(controller: THREE.XRTargetRaySpace) {
+  private getIntersections(controller: XRTargetRaySpace) {
     this.tempMatrix.identity().extractRotation(controller.matrixWorld);
     this.raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
     this.raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
@@ -84,9 +99,7 @@ export class VR {
   }
 
   // トリガーを押した時に呼ばれる
-  private onSelectStart(
-    event: THREE.Event<"selectstart", THREE.XRTargetRaySpace>
-  ) {
+  private onSelectStart(event: Event<"selectstart", XRTargetRaySpace>) {
     const controller = event.target;
 
     // レイと交差しているシェイプの取得
@@ -96,16 +109,14 @@ export class VR {
     if (intersections.length > 0) {
       const intersection = intersections[0];
       const object = intersection.object;
-      (
-        (object as THREE.Mesh).material as THREE.MeshStandardMaterial
-      ).emissive.b = 1;
+      ((object as Mesh).material as MeshStandardMaterial).emissive.b = 1;
       controller.attach(object);
       controller.userData.selected = object;
     }
   }
 
   // トリガーを離した時に呼ばれる
-  private onSelectEnd(event: THREE.Event<"selectend", THREE.XRTargetRaySpace>) {
+  private onSelectEnd(event: Event<"selectend", XRTargetRaySpace>) {
     const controller = event.target;
 
     // シェイプをグループにアタッチし、シェイプの色を戻す
@@ -121,14 +132,12 @@ export class VR {
   private cleanIntersected() {
     while (this.intersected.length) {
       const object = this.intersected.pop();
-      (
-        (object as THREE.Mesh).material as THREE.MeshStandardMaterial
-      ).emissive.r = 0;
+      ((object as Mesh).material as MeshStandardMaterial).emissive.r = 0;
     }
   }
 
   // シェイプとコントローラのレイの交差判定
-  private intersectObjects(controller: THREE.XRTargetRaySpace) {
+  private intersectObjects(controller: XRTargetRaySpace) {
     // 選択時は無処理
     if (controller.userData.selected !== undefined) return;
 
@@ -142,9 +151,7 @@ export class VR {
       // 交差時は赤くする
       const intersection = intersections[0];
       const object = intersection.object;
-      (
-        (object as THREE.Mesh).material as THREE.MeshStandardMaterial
-      ).emissive.r = 1;
+      ((object as Mesh).material as MeshStandardMaterial).emissive.r = 1;
       this.intersected.push(object);
 
       // 交差時は光線の長さをシェイプまでにする

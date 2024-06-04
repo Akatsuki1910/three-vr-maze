@@ -222,7 +222,7 @@ const isSp = window.DeviceOrientationEvent && "ontouchstart" in window;
 
   let nowPos = 0;
   let frame = 0;
-  threeAnimate(async (t, f) => {
+  threeAnimate(async () => {
     pixiAnimate(async () => {
       if (wallMaze.length === 0) return;
 
