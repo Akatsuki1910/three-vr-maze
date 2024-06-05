@@ -51,6 +51,7 @@ const isSp = window.DeviceOrientationEvent && "ontouchstart" in window;
   } else {
     manager.destroy();
     manager2.destroy();
+    document.getElementById("nipple-wrapper")?.remove();
   }
 
   const { scene, camera, group, renderer, threeAnimate, controllers } =
@@ -134,11 +135,11 @@ const isSp = window.DeviceOrientationEvent && "ontouchstart" in window;
     return canMove;
   };
 
-  // document.getElementsByTagName("canvas")[0].onclick = () => {
-  //   if (!renderer.xr.getSession()) {
-  //     controls.lock();
-  //   }
-  // };
+  document.getElementsByTagName("canvas")[0].onclick = () => {
+    if (!isSp && !renderer.xr.getSession()) {
+      controls.lock();
+    }
+  };
 
   controls.addEventListener("lock", () => {
     console.log("lock");
