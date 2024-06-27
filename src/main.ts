@@ -175,7 +175,7 @@ const isSp = window.DeviceOrientationEvent && "ontouchstart" in window;
   >();
 
   // const hostname = new URL(window.location.href).hostname;
-  const socket = new WebSocket(`wss://localhost:3000`);
+  const socket = new WebSocket(`ws://localhost:3000`);
   socket.onerror = (error) => console.error(error);
   socket.onopen = () => socket.send("first");
   socket.onmessage = (event) => {
