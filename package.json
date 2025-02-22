@@ -20,7 +20,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vite test",
-    "server": "tsx ./server/index.ts"
+    "server": "tsx ./server/index.ts",
+    "server:build": "bun build ./server/index.ts --outdir ./dist/server"
   },
   "type": "module"
 }
