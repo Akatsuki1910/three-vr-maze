@@ -10,5 +10,7 @@ RUN bun install
 
 COPY . ./
 
-CMD [ "bun", "run", "server" ]
+EXPOSE 8080
+
+CMD [ "bun", "run", "server", "--port=8080" ]
 
