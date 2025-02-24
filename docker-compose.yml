@@ -3,10 +3,8 @@ version: "3.0"
 services:
   three-vr-maze:
     container_name: "three-vr-maze"
-    volumes:
-      - "./server:/app"
     build: .
     ports:
-      - "${PORT}:8080"
+      - "8080:8080"
     environment:
-      - PORT=${PORT}
+      - PORT=8080

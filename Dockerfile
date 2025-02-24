@@ -1,4 +1,5 @@
-FROM oven/bun:latest
+FROM node:lts-slim
+RUN npm install -g bun
 
 WORKDIR /app
 
@@ -8,9 +9,8 @@ COPY package*.json ./
 
 RUN bun install
 
-COPY . ./
+COPY . .
 
 EXPOSE 8080
 
-CMD [ "bun", "run", "server", "--port=8080" ]
-
+CMD ["bun", "run", "server"]
