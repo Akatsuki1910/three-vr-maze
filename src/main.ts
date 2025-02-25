@@ -175,7 +175,10 @@ const isSp = window.DeviceOrientationEvent && "ontouchstart" in window;
   >();
 
   // const hostname = new URL(window.location.href).hostname;
-  const socket = new WebSocket(`ws://localhost:3000`);
+  // const socket = new WebSocket(`ws://localhost:3000`);
+  const socket = new WebSocket(
+    `wss://three-vr-maze-780495399838.us-central1.run.app`
+  );
   socket.onerror = (error) => console.error(error);
   socket.onopen = () => socket.send("first");
   socket.onmessage = (event) => {
